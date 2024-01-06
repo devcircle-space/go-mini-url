@@ -5,20 +5,23 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/golang-jwt/jwt"
+	"github.com/golang-jwt/jwt/v5"
 )
 
 type TokenClaims struct {
 	UserId string `json:"user_id"`
-	jwt.StandardClaims
+	jwt.RegisteredClaims
 }
 
-func CreateToken(payload *TokenClaims) (string, error) {
+func CreateToken(userId *string) (string, error) {
+	fmt.Println(*userId)
 	k, kError := getSecretKey("AUTH_TOKEN_SECRET")
 	if kError != nil {
 		return "", kError
 	}
-	s := jwt.NewWithClaims(jwt.SigningMethodHS256, payload)
+	s := jwt.NewWithClaims(jwt.SigningMethodHS256, &TokenClaims{
+		UserId: *userId,
+	})
 	token, err := s.SignedString([]byte(k))
 	if err != nil {
 		return "", err

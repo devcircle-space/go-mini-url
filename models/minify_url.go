@@ -17,6 +17,7 @@ type UrlPayload struct {
 	Link   string             `json:"link" required:"true"`
 	Label  string             `json:"label"`
 	Active bool               `json:"active" default:"true"`
+	UserId string             `json:"user_id"`
 }
 
 type UrlResult struct {
@@ -27,9 +28,10 @@ type UrlResult struct {
 
 func (u *UrlPayload) Create(db *mongo.Client) error {
 	data := bson.M{
-		"link":   u.Link,
-		"label":  u.Label,
-		"active": true,
+		"link":    u.Link,
+		"label":   u.Label,
+		"active":  true,
+		"user_id": u.UserId,
 	}
 	collection := db.Database(os.Getenv("DATABASE_NAME")).Collection(COLLECTION_NAME)
 	_, insertError := collection.InsertOne(context.Background(), data)
@@ -40,8 +42,8 @@ func (u *UrlPayload) Create(db *mongo.Client) error {
 	return nil
 }
 
-func (u *UrlPayload) Get(id *primitive.ObjectID, db *mongo.Client) error {
-	collection := db.Database(os.Getenv("DATABASE_NAME")).Collection(COLLECTION_NAME).FindOne(context.Background(), bson.M{"_id": *id})
+func (u *UrlPayload) Get(db *mongo.Client) error {
+	collection := db.Database(os.Getenv("DATABASE_NAME")).Collection(COLLECTION_NAME).FindOne(context.Background(), bson.M{"_id": u.Id})
 	decodeError := collection.Decode(&u)
 	if decodeError != nil {
 		fmt.Println(decodeError)
@@ -54,9 +56,9 @@ func (u *UrlPayload) Update(id *primitive.ObjectID, db *mongo.Client) error {
 	return nil
 }
 
-func (u *UrlPayload) Delete(id *primitive.ObjectID, db *mongo.Client) error {
+func (u *UrlPayload) Delete(db *mongo.Client) error {
 	collection := db.Database(os.Getenv("DATABASE_NAME")).Collection(COLLECTION_NAME)
-	result := collection.FindOneAndDelete(context.Background(), bson.M{"_id": *id})
+	result := collection.FindOneAndDelete(context.Background(), bson.M{"_id": u.Id})
 	if result.Err() != nil {
 		fmt.Println(result.Err())
 		return result.Err()
@@ -64,9 +66,9 @@ func (u *UrlPayload) Delete(id *primitive.ObjectID, db *mongo.Client) error {
 	return nil
 }
 
-func GetAll(db *mongo.Client) (urls []UrlResult, err error) {
+func (u *UrlPayload) GetAll(db *mongo.Client) (urls []UrlResult, err error) {
 	collection := db.Database(os.Getenv("DATABASE_NAME")).Collection(COLLECTION_NAME)
-	cursor, err := collection.Find(context.Background(), bson.M{})
+	cursor, err := collection.Find(context.Background(), bson.M{"user_id": u.UserId})
 	if err != nil {
 		fmt.Println(err)
 		return nil, err

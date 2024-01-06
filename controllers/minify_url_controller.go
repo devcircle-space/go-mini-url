@@ -17,6 +17,11 @@ var (
 )
 
 func CreateMinifiedUrl(c *gin.Context) {
+	userId := c.GetString("user_id")
+	if userId == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
 	var u models.UrlPayload
 	bindingError := c.BindJSON(&u)
 	if bindingError != nil {
@@ -25,6 +30,7 @@ func CreateMinifiedUrl(c *gin.Context) {
 		return
 	}
 	db := db.InitDB()
+	u.UserId = userId
 	error := u.Create(db)
 	if error != nil {
 		fmt.Println(error)
@@ -48,7 +54,8 @@ func GetFromMinifiedUrl(c *gin.Context) {
 	}
 	var u models.UrlPayload
 	db := db.InitDB()
-	error := u.Get(&parsedId, db)
+	u.Id = parsedId
+	error := u.Get(db)
 	if error != nil {
 		fmt.Println(error)
 		c.JSON(http.StatusBadRequest, gin.H{"error": genericError})
@@ -58,6 +65,11 @@ func GetFromMinifiedUrl(c *gin.Context) {
 }
 
 func UpdateMinifiedUrl(c *gin.Context) {
+	userId := c.GetString("user_id")
+	if userId == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
 	urlId := c.Params.ByName("id")
 	if urlId == "" {
 		c.JSON(http.StatusBadGateway, gin.H{"error": idRequired})
@@ -71,10 +83,16 @@ func UpdateMinifiedUrl(c *gin.Context) {
 	}
 	var u models.UrlPayload
 	db := db.InitDB()
+	u.UserId = userId
 	u.Update(&parsedId, db)
 }
 
 func DeleteMinifiedUrl(c *gin.Context) {
+	userId := c.GetString("user_id")
+	if userId == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
 	urlId := c.Params.ByName("id")
 	if urlId == "" {
 		c.JSON(http.StatusBadGateway, gin.H{"error": idRequired})
@@ -88,7 +106,9 @@ func DeleteMinifiedUrl(c *gin.Context) {
 	}
 	var u models.UrlPayload
 	db := db.InitDB()
-	error := u.Delete(&parsedId, db)
+	u.UserId = userId
+	u.Id = parsedId
+	error := u.Delete(db)
 	if error != nil {
 		fmt.Println(error)
 		c.JSON(http.StatusBadRequest, gin.H{"error": genericError})
@@ -98,8 +118,15 @@ func DeleteMinifiedUrl(c *gin.Context) {
 }
 
 func GetAllMinifiedUrls(c *gin.Context) {
+	userId := c.GetString("user_id")
+	if userId == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+	var u models.UrlPayload
 	db := db.InitDB()
-	urls, error := models.GetAll(db)
+	u.UserId = userId
+	urls, error := u.GetAll(db)
 	if error != nil {
 		fmt.Println(error)
 		c.JSON(http.StatusBadRequest, gin.H{"error": genericError})

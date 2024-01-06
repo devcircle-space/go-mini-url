@@ -56,15 +56,16 @@ func (u *UserRegister) Create(db *mongo.Client) error {
 	return nil
 }
 
-func (u *UserLogin) Find(db *mongo.Client) (*User, error) {
+func (u *UserLogin) Find(db *mongo.Client) (User, error) {
 	collection := db.Database(os.Getenv("DATABASE_NAME")).Collection(userCollection)
 	var user User
-	decodeError := collection.FindOne(context.Background(), bson.M{}).Decode(&user)
+	decodeError := collection.FindOne(context.Background(), bson.M{"email": u.Email}).Decode(&user)
 	if decodeError != nil {
 		fmt.Println(decodeError)
-		return nil, decodeError
+		return User{}, decodeError
 	}
-	return &user, nil
+	fmt.Println(user)
+	return user, nil
 }
 
 func Update() {}

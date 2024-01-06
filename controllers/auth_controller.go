@@ -27,10 +27,8 @@ func Login(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid password"})
 		return
 	}
-	tokenPayload := utils.TokenClaims{
-		UserId: userData.Id.Hex(),
-	}
-	token, tokenError := utils.CreateToken(&tokenPayload)
+	_id := userData.Id.Hex()
+	token, tokenError := utils.CreateToken(&_id)
 	if tokenError != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": tokenError.Error()})
 		return

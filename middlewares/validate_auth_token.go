@@ -13,6 +13,7 @@ func ValidateAuthToken(c *gin.Context) {
 	authHeader := c.Request.Header.Get("Authorization")
 	if authHeader == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Authorization missing"})
+		c.Abort()
 		return
 	}
 	token := strings.Split(authHeader, "Bearer ")[1]
