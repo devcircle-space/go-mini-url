@@ -3,6 +3,7 @@ package controllers
 import (
 	"fmt"
 	"net/http"
+	"time"
 
 	"devcircle.space/mini-url/db"
 	"devcircle.space/mini-url/models"
@@ -27,8 +28,13 @@ func Login(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid password"})
 		return
 	}
-	_id := userData.Id.Hex()
-	token, tokenError := utils.CreateToken(&_id)
+	var tokenPayload = utils.TokenPayload{
+		UserId:    userData.Id.Hex(),
+		ExpiresAt: time.Now().Add(time.Hour).Unix(),
+		IssuedAt:  time.Now().Unix(),
+		IssuedBy:  "devcircle.space",
+	}
+	token, tokenError := tokenPayload.CreateToken()
 	if tokenError != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": tokenError.Error()})
 		return
@@ -48,7 +54,21 @@ func Register(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, gin.H{"message": "User created successfully"})
 }
-func Logout(c *gin.Context)               {}
+func Logout(c *gin.Context) {
+	userId := c.GetString("user_id")
+	var tokenPayload = utils.TokenPayload{
+		UserId:    userId,
+		ExpiresAt: time.Now().Add(-time.Hour).Unix(),
+		IssuedAt:  time.Now().Unix(),
+		IssuedBy:  "devcircle.space",
+	}
+	token, tokenError := tokenPayload.CreateToken()
+	if tokenError != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": tokenError.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"data": token})
+}
 func GetResetPasswordLink(c *gin.Context) {}
 func ResetPassword(c *gin.Context)        {}
 func VerifyUser(c *gin.Context) {

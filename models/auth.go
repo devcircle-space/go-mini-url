@@ -64,7 +64,6 @@ func (u *UserLogin) Find(db *mongo.Client) (User, error) {
 		fmt.Println(decodeError)
 		return User{}, decodeError
 	}
-	fmt.Println(user)
 	return user, nil
 }
 
