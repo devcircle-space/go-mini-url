@@ -9,6 +9,7 @@ import (
 	"devcircle.space/mini-url/models"
 	"devcircle.space/mini-url/utils"
 	"github.com/gin-gonic/gin"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 func Login(c *gin.Context) {
@@ -80,6 +81,12 @@ func VerifyUser(c *gin.Context) {
 	}
 	db := db.InitDB()
 	var user models.UserLogin
+	parsedId, parsingError := primitive.ObjectIDFromHex(id)
+	if parsingError != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": parsingError.Error()})
+		return
+	}
+	user.Id = parsedId
 	userData, findError := user.Find(db)
 	if findError != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": findError.Error()})

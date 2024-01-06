@@ -21,8 +21,9 @@ type User struct {
 }
 
 type UserLogin struct {
-	Email    string `json:"email" bson:"email" required:"true"`
-	Password string `json:"password" bson:"password" required:"true"`
+	Id       primitive.ObjectID `json:"_id" bson:"_id"`
+	Email    string             `json:"email" bson:"email" required:"true"`
+	Password string             `json:"password" bson:"password" required:"true"`
 }
 
 type UserRegister struct {
@@ -59,7 +60,11 @@ func (u *UserRegister) Create(db *mongo.Client) error {
 func (u *UserLogin) Find(db *mongo.Client) (User, error) {
 	collection := db.Database(os.Getenv("DATABASE_NAME")).Collection(userCollection)
 	var user User
-	decodeError := collection.FindOne(context.Background(), bson.M{"email": u.Email}).Decode(&user)
+	filter := bson.M{"$or": []interface{}{
+		bson.M{"_id": u.Id},
+		bson.M{"email": u.Email},
+	}}
+	decodeError := collection.FindOne(context.Background(), filter).Decode(&user)
 	if decodeError != nil {
 		fmt.Println(decodeError)
 		return User{}, decodeError
